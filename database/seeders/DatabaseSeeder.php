@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             WarehouseSeeder::class,
             UserSeeder::class,
+            MasterDataSeeder::class,
+            MaterialStockSeeder::class,
         ]);
     }
 }

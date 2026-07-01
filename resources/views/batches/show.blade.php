@@ -168,102 +168,142 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {{-- Record Output (in_progress only) --}}
+    {{-- Action Forms (in_progress only) --}}
+    @if($batch->status === 'in_progress')
+    <div class="space-y-6 mb-6">
+        
+        {{-- Section: Product Good & Defect --}}
         @if($batch->canRecordOutput())
-        @can('batch.record_output')
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 class="text-sm font-semibold text-gray-900 mb-4">Catat Unit Baik</h4>
-            <form method="POST" action="{{ route('batches.output', $batch) }}" class="flex flex-col gap-3">
-                @csrf
-                <select name="product_id" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">-- Pilih Produk --</option>
-                    @foreach($batch->products as $bp)
-                    @if($bp->planned_qty - $bp->good_qty - $bp->defect_qty > 0)
-                    <option value="{{ $bp->product_id }}">{{ $bp->product->full_name }} (Sisa: {{ $bp->planned_qty - $bp->good_qty - $bp->defect_qty }})</option>
+            <h4 class="text-sm font-semibold text-gray-900 mb-4">Pencatatan Hasil Produksi (Unit Baik & Rusak)</h4>
+            <div class="space-y-4">
+                @foreach($batch->products as $bp)
+                @php
+                    $sisa = $bp->planned_qty - $bp->good_qty - $bp->defect_qty;
+                @endphp
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-lg bg-gray-50 border border-gray-100">
+                    <div class="flex-1 min-w-[200px]">
+                        <span class="font-medium text-sm text-gray-900 block">{{ $bp->product->full_name }}</span>
+                        <span class="text-xs text-gray-500">Rencana: {{ $bp->planned_qty }} &middot; Sisa: <strong class="{{ $sisa > 0 ? 'text-amber-600' : 'text-gray-400' }}">{{ $sisa }}</strong></span>
+                    </div>
+                    @if($sisa > 0)
+                    <div class="flex flex-wrap items-center gap-6">
+                        @can('batch.record_output')
+                        <form method="POST" action="{{ route('batches.output', $batch) }}" class="flex items-center gap-2">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $bp->product_id }}">
+                            <input type="number" name="good_qty" min="1" max="{{ $sisa }}" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Baik">
+                            <button type="submit" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition">Catat Baik</button>
+                        </form>
+                        @endcan
+
+                        @can('batch.record_defect')
+                        <form method="POST" action="{{ route('batches.defect', $batch) }}" class="flex items-center gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-2 lg:pt-0 lg:pl-6">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $bp->product_id }}">
+                            <input type="number" name="defect_qty" min="1" max="{{ $sisa }}" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Rusak">
+                            <select name="reason" required class="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500">
+                                @foreach(\App\Models\BatchDefect::REASONS as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <input type="text" name="notes" class="w-28 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500" placeholder="Catatan (opsional)">
+                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition">Catat Rusak</button>
+                        </form>
+                        @endcan
+                    </div>
+                    @else
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">Selesai Produksi</span>
                     @endif
-                    @endforeach
-                </select>
-                <div class="flex gap-3">
-                    <input type="number" name="good_qty" min="1" required class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Jumlah">
-                    <button class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">Catat</button>
                 </div>
-            </form>
+                @endforeach
+            </div>
         </div>
-        @endcan
-        @can('batch.record_defect')
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 class="text-sm font-semibold text-gray-900 mb-4">Catat Unit Rusak</h4>
-            <form method="POST" action="{{ route('batches.defect', $batch) }}" class="flex flex-col gap-3">
-                @csrf
-                <select name="product_id" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">-- Pilih Produk --</option>
-                    @foreach($batch->products as $bp)
-                    @if($bp->planned_qty - $bp->good_qty - $bp->defect_qty > 0)
-                    <option value="{{ $bp->product_id }}">{{ $bp->product->full_name }} (Sisa: {{ $bp->planned_qty - $bp->good_qty - $bp->defect_qty }})</option>
-                    @endif
-                    @endforeach
-                </select>
-                <div class="flex gap-3">
-                    <input type="number" name="defect_qty" min="1" required class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Jumlah">
-                    <select name="reason" required class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm">
-                        @foreach(\App\Models\BatchDefect::REASONS as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
-                    </select>
-                </div>
-                <div class="flex gap-3">
-                    <input type="text" name="notes" class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Catatan (opsional)">
-                    <button class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">Catat Rusak</button>
-                </div>
-            </form>
-        </div>
-        @endcan
         @endif
 
-        {{-- Top-up Material & Defect (in_progress only) --}}
-        @if($batch->status === 'in_progress')
+        {{-- Section: Material Defect & Top-up --}}
         @can('batch.topup')
         <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 class="text-sm font-semibold text-gray-900 mb-4">Catat Bahan Baku Rusak</h4>
-            <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex flex-col gap-3">
-                @csrf
-                <input type="hidden" name="type" value="defect">
-                <select name="product_id" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">-- Pilih Produk --</option>
-                    @foreach($batch->products as $bp)
-                    <option value="{{ $bp->product_id }}">{{ $bp->product->full_name }}</option>
-                    @endforeach
-                </select>
-                <select name="material_id" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">-- Bahan Rusak --</option>
-                    @foreach($materials as $m)<option value="{{ $m->id }}">{{ $m->name }} ({{ $m->unit }})</option>@endforeach
-                </select>
-                <div class="flex gap-3">
-                    <input type="number" name="quantity" step="0.001" min="0.001" required class="w-32 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Qty Rusak">
-                    <input type="text" name="reason" required class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Keterangan Rusak">
-                </div>
-                <button class="w-full px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition mt-2">Catat & Ganti dari Gudang</button>
-            </form>
-        </div>
+            <h4 class="text-sm font-semibold text-gray-900 mb-4">Pencatatan Masalah & Tambahan Bahan Baku</h4>
+            <div class="space-y-4 mb-6">
+                @foreach($preview as $item)
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-lg bg-gray-50 border border-gray-100">
+                    <div class="flex-1 min-w-[200px]">
+                        <span class="font-medium text-sm text-gray-900 block">{{ $item['material_name'] }}</span>
+                        <span class="text-xs text-gray-400">{{ $item['material_code'] }} &middot; Unit: {{ $item['unit'] }}</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-6">
+                        {{-- Form 1: Catat Bahan Baku Rusak (Ganti dari Gudang) --}}
+                        <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex items-center gap-2">
+                            @csrf
+                            <input type="hidden" name="type" value="defect">
+                            <input type="hidden" name="material_id" value="{{ $item['material_id'] }}">
+                            
+                            @php
+                                $usingProducts = collect($batch->products)->filter(function($bp) use ($item) {
+                                    return $bp->product && $bp->product->activeBom && $bp->product->activeBom->items->contains('material_id', $item['material_id']);
+                                });
+                            @endphp
+                            
+                            @if($usingProducts->count() > 1)
+                            <select name="product_id" required class="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500">
+                                <option value="">-- Untuk Produk --</option>
+                                @foreach($usingProducts as $bp)
+                                    <option value="{{ $bp->product_id }}">{{ $bp->product->variant_name }}</option>
+                                @endforeach
+                            </select>
+                            @elseif($usingProducts->count() === 1)
+                            <input type="hidden" name="product_id" value="{{ $usingProducts->first()->product_id }}">
+                            @endif
 
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h4 class="text-sm font-semibold text-gray-900 mb-4">Top-up Bahan (Manual)</h4>
-            <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex flex-col gap-3">
-                @csrf
-                <input type="hidden" name="type" value="topup">
-                <select name="material_id" required class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
-                    <option value="">-- Bahan --</option>
-                    @foreach($materials as $m)<option value="{{ $m->id }}">{{ $m->name }} ({{ $m->unit }})</option>@endforeach
-                </select>
-                <div class="flex gap-3">
-                    <input type="number" name="quantity" step="0.001" min="0.001" required class="w-32 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Qty">
-                    <input type="text" name="reason" required class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="Alasan">
+                            <input type="number" name="quantity" step="0.001" min="0.001" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Rusak">
+                            <input type="text" name="reason" required class="w-32 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500" placeholder="Keterangan Rusak">
+                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition">Catat Rusak</button>
+                        </form>
+
+                        {{-- Form 2: Top-up Bahan (Manual) --}}
+                        <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex items-center gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-2 lg:pt-0 lg:pl-6">
+                            @csrf
+                            <input type="hidden" name="type" value="topup">
+                            <input type="hidden" name="material_id" value="{{ $item['material_id'] }}">
+                            
+                            <input type="number" name="quantity" step="0.001" min="0.001" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Top-up">
+                            <input type="text" name="reason" required class="w-32 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500" placeholder="Alasan">
+                            <button type="submit" class="px-3 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition">Top-up</button>
+                        </form>
+                    </div>
                 </div>
-                <button class="w-full px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition mt-2">Tambah Bahan</button>
-            </form>
+                @endforeach
+            </div>
+
+            {{-- Fallback: Top-up Bahan Lainnya --}}
+            @php
+                $requiredMaterialIds = collect($preview)->pluck('material_id')->toArray();
+                $otherMaterials = $materials->filter(fn($m) => !in_array($m->id, $requiredMaterialIds));
+            @endphp
+            @if($otherMaterials->isNotEmpty())
+            <div class="border-t border-gray-100 pt-4 mt-6">
+                <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Top-up Bahan Lainnya (Di luar BOM)</h5>
+                <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex flex-wrap items-center gap-3">
+                    @csrf
+                    <input type="hidden" name="type" value="topup">
+                    <select name="material_id" required class="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500">
+                        <option value="">-- Pilih Bahan Lain --</option>
+                        @foreach($otherMaterials as $m)
+                            <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->unit }})</option>
+                        @endforeach
+                    </select>
+                    <input type="number" name="quantity" step="0.001" min="0.001" required class="w-28 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500" placeholder="Jumlah Qty">
+                    <input type="text" name="reason" required class="flex-1 min-w-[200px] px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-1 focus:ring-primary-500" placeholder="Alasan Top-up">
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition">Tambah Bahan</button>
+                </form>
+            </div>
+            @endif
         </div>
         @endcan
-        @endif
+
     </div>
+    @endif
 
     {{-- Defects Log --}}
     @if($batch->defects->isNotEmpty())

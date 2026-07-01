@@ -79,7 +79,7 @@ class BatchController extends Controller
         $this->authorize('batch.view');
 
         $batch->load([
-            'products.product:id,sku,full_name,unit',
+            'products.product.activeBom.items.material',
             'warehouse:id,name',
             'creator:id,name',
             'materials.material:id,code,name,unit',

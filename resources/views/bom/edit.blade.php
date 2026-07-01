@@ -80,7 +80,13 @@
         {{-- CSV Import --}}
         @can('bom.import')
         <div class="mt-6 bg-white rounded-xl border border-gray-200 p-6">
-            <h4 class="font-semibold text-gray-900 mb-3">Import BOM dari CSV</h4>
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="font-semibold text-gray-900">Import BOM dari CSV</h4>
+                <a href="{{ asset('templates/bom_import_template.csv') }}" download class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Unduh Template CSV
+                </a>
+            </div>
             <p class="text-xs text-gray-500 mb-3">Format: Item Name, Variant Name, Material Code, Quantity</p>
             <form method="POST" action="{{ route('bom.import') }}" enctype="multipart/form-data" class="flex items-center gap-3">
                 @csrf
