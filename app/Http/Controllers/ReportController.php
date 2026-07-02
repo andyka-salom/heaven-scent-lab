@@ -77,6 +77,7 @@ class ReportController extends Controller
             ->join('production_batches', 'batch_material_additions.production_batch_id', '=', 'production_batches.id')
             ->join('materials', 'batch_material_additions.material_id', '=', 'materials.id')
             ->whereBetween('production_batches.production_date', [$from, $to])
+            ->where('batch_material_additions.type', 'topup')
             ->select(
                 'materials.id as material_id',
                 'materials.code',

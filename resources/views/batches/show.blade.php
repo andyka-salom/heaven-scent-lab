@@ -163,7 +163,7 @@
                         <td class="py-2">{{ number_format($item['stock_qty'], 1, ',', '.') }} {{ $item['unit'] }}</td>
                         @php
                             $initialIssued = $batch->materials->firstWhere('material_id', $item['material_id'])?->issued_qty ?? 0;
-                            $additionalIssued = $batch->additions->where('material_id', $item['material_id'])->sum('quantity');
+                            $additionalIssued = $batch->additions->where('material_id', $item['material_id'])->where('type', 'topup')->sum('quantity');
                             $totalIssued = $initialIssued + $additionalIssued;
                         @endphp
                         <td class="py-2">{{ number_format($totalIssued, 1, ',', '.') }} {{ $item['unit'] }}</td>

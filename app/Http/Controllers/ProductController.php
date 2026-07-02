@@ -24,7 +24,9 @@ class ProductController extends Controller
         $query = Product::query()
             ->select('products.*')
             ->with('defaultWarehouse:id,name')
-            ->withCount('boms');
+            ->withCount(['boms as boms_count' => function ($q) {
+                $q->where('is_active', true);
+            }]);
 
         return DataTables::eloquent($query)
             ->addColumn('warehouse', fn ($p) => $p->defaultWarehouse?->name ?? '-')
