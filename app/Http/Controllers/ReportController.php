@@ -55,7 +55,13 @@ class ReportController extends Controller
         $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth()->format('Y-m-d'));
         $to = $this->parseDate($request->input('to'), Carbon::now()->format('Y-m-d'));
 
-        dd($from, $to, \App\Models\ProductionBatch::whereBetween('production_date', [$from, $to])->get()->toArray());
+        dd([
+            'from' => $from,
+            'to' => $to,
+            'batches' => \App\Models\ProductionBatch::whereBetween('production_date', [$from, $to])->pluck('id')->toArray(),
+            'batch_materials_count' => \App\Models\BatchMaterial::count(),
+            'batch_materials' => \App\Models\BatchMaterial::limit(10)->get()->toArray(),
+        ]);
 
         // DB-level aggregation: issued materials from batch_materials
         $issuedUsage = BatchMaterial::query()
