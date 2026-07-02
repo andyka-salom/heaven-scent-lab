@@ -55,12 +55,24 @@ class ReportController extends Controller
         $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth()->format('Y-m-d'));
         $to = $this->parseDate($request->input('to'), Carbon::now()->format('Y-m-d'));
 
+        $query1 = BatchMaterial::query()
+            ->join('production_batches', 'batch_materials.production_batch_id', '=', 'production_batches.id')
+            ->join('materials', 'batch_materials.material_id', '=', 'materials.id')
+            ->whereBetween('production_batches.production_date', [$from, $to])
+            ->select(
+                'materials.id as material_id',
+                'materials.code',
+                'materials.name',
+                'materials.unit',
+                DB::raw('COALESCE(SUM(batch_materials.issued_qty), 0) as issued'),
+                DB::raw('0 as additions')
+            )
+            ->groupBy('materials.id', 'materials.code', 'materials.name', 'materials.unit');
+
         dd([
-            'from' => $from,
-            'to' => $to,
-            'batches' => \App\Models\ProductionBatch::whereBetween('production_date', [$from, $to])->pluck('id')->toArray(),
-            'batch_materials_count' => \App\Models\BatchMaterial::count(),
-            'batch_materials' => \App\Models\BatchMaterial::limit(10)->get()->toArray(),
+            'sql' => $query1->toSql(),
+            'bindings' => $query1->getBindings(),
+            'results' => $query1->get()->toArray(),
         ]);
 
         // DB-level aggregation: issued materials from batch_materials
