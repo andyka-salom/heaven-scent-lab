@@ -16,13 +16,13 @@
                             <div class="flex gap-4 items-start bg-gray-50 p-4 rounded-lg border border-gray-100">
                                 <div class="flex-1">
                                     <label class="block text-xs font-medium text-gray-500 mb-1">Produk</label>
-                                    <div x-data="{ open: false, search: '' }" class="relative">
+                                    <div x-data="{ open: false, search: '' }" @click.outside="open = false" class="relative">
                                         <input type="hidden" :name="'products['+index+'][product_id]'" :value="item.product_id">
                                         <button type="button" @click="open = !open" class="w-full px-3 py-2 text-left bg-white rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent flex items-center justify-between">
                                             <span x-text="productsList.find(i => i.id === item.product_id)?.name || '-- Pilih Produk --'" class="truncate"></span>
                                             <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                                         </button>
-                                        <div x-show="open" @click.outside="open = false" x-cloak class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-2">
+                                        <div x-show="open" x-cloak class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-2">
                                             <input type="text" x-model="search" placeholder="Cari produk..." class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 focus:border-transparent">
                                             <div class="max-h-48 overflow-y-auto space-y-0.5">
                                                 <template x-for="p in productsList.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))" :key="p.id">
@@ -56,13 +56,13 @@
                             value: '{{ old('warehouse_id', '') }}', 
                             label: '-- Pilih Gudang --',
                             items: @json(collect($warehouses)->map(fn($name, $id) => ['id' => (string) $id, 'name' => $name])->values())
-                        }" class="relative">
+                        }" @click.outside="open = false" class="relative">
                             <input type="hidden" name="warehouse_id" :value="value" required>
                             <button type="button" @click="open = !open" class="w-full px-3 py-2 text-left bg-white rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent flex items-center justify-between">
                                 <span x-text="items.find(i => i.id === value)?.name || label" class="truncate"></span>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
-                            <div x-show="open" @click.outside="open = false" x-cloak class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-2">
+                            <div x-show="open" x-cloak class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-2">
                                 <input type="text" x-model="search" placeholder="Cari gudang..." class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 focus:border-transparent">
                                 <div class="max-h-48 overflow-y-auto space-y-0.5">
                                     <template x-for="item in items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))" :key="item.id">
