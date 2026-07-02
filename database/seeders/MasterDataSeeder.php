@@ -48,6 +48,7 @@ class MasterDataSeeder extends Seeder
                 [
                     'item_name' => $prodData['item_name'],
                     'variant_name' => $prodData['variant_name'],
+                    'full_name' => $prodData['item_name'] . ' / ' . $prodData['variant_name'],
                     'unit' => $prodData['unit'],
                     'default_warehouse_id' => $prodData['default_warehouse_id'],
                     'is_active' => $prodData['is_active'],

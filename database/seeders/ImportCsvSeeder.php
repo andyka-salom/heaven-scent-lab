@@ -77,6 +77,7 @@ class ImportCsvSeeder extends Seeder
                     ],
                     [
                         'sku' => $existingProduct ? $existingProduct->sku : $sku,
+                        'full_name' => $itemName . ' / ' . $variantName,
                         'unit' => 'pcs',
                         'default_warehouse_id' => $warehouse->id,
                         'is_active' => true,

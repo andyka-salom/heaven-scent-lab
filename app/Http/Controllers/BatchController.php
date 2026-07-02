@@ -84,6 +84,7 @@ class BatchController extends Controller
             'creator:id,name',
             'materials.material:id,code,name,unit',
             'additions.material:id,code,name,unit',
+            'additions.product:id,full_name',
             'defects.product:id,full_name',
             'outputs.product:id,full_name',
         ]);
