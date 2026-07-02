@@ -234,7 +234,7 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-6">
                         {{-- Form 1: Catat Bahan Baku Rusak (Ganti dari Gudang) --}}
-                        <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex items-center gap-2">
+                        <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex items-end gap-2">
                             @csrf
                             <input type="hidden" name="type" value="defect">
                             <input type="hidden" name="material_id" value="{{ $item['material_id'] }}">
@@ -246,30 +246,49 @@
                             @endphp
                             
                             @if($usingProducts->count() > 1)
-                            <select name="product_id" required class="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500">
-                                <option value="">-- Untuk Produk --</option>
-                                @foreach($usingProducts as $bp)
-                                    <option value="{{ $bp->product_id }}">{{ $bp->product->variant_name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Produk</label>
+                                <select name="product_id" required class="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 h-8">
+                                    <option value="">-- Pilih --</option>
+                                    @foreach($usingProducts as $bp)
+                                        <option value="{{ $bp->product_id }}">{{ $bp->product->variant_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             @elseif($usingProducts->count() === 1)
                             <input type="hidden" name="product_id" value="{{ $usingProducts->first()->product_id }}">
                             @endif
 
-                            <input type="number" name="quantity" step="0.001" min="0.001" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Rusak">
-                            <input type="text" name="reason" required class="w-32 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500" placeholder="Keterangan Rusak">
-                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition">Catat Rusak</button>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Qty Rusak</label>
+                                <input type="number" name="quantity" step="0.001" min="0.001" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 h-8" placeholder="0.000">
+                            </div>
+
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Keterangan</label>
+                                <input type="text" name="reason" required class="w-32 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 h-8" placeholder="Keterangan">
+                            </div>
+
+                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition h-8 flex items-center justify-center">Catat Rusak</button>
                         </form>
 
                         {{-- Form 2: Top-up Bahan (Manual) --}}
-                        <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex items-center gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-2 lg:pt-0 lg:pl-6">
+                        <form method="POST" action="{{ route('batches.material', $batch) }}" class="flex items-end gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-2 lg:pt-0 lg:pl-6">
                             @csrf
                             <input type="hidden" name="type" value="topup">
                             <input type="hidden" name="material_id" value="{{ $item['material_id'] }}">
                             
-                            <input type="number" name="quantity" step="0.001" min="0.001" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Top-up">
-                            <input type="text" name="reason" required class="w-32 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500" placeholder="Alasan">
-                            <button type="submit" class="px-3 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition">Top-up</button>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Qty Top-up</label>
+                                <input type="number" name="quantity" step="0.001" min="0.001" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 h-8" placeholder="0.000">
+                            </div>
+
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Alasan</label>
+                                <input type="text" name="reason" required class="w-32 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 h-8" placeholder="Alasan">
+                            </div>
+
+                            <button type="submit" class="px-3 py-1.5 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition h-8 flex items-center justify-center">Top-up</button>
                         </form>
                     </div>
                 </div>
