@@ -50,25 +50,19 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Gudang Sumber Bahan</label>
-                        <div x-data="{ 
-                            open: false, 
-                            search: '', 
-                            value: '{{ old('warehouse_id', '') }}', 
-                            label: '-- Pilih Gudang --',
-                            items: @json(collect($warehouses)->map(fn($name, $id) => ['id' => (string) $id, 'name' => $name])->values())
-                        }" @click.outside="open = false" class="relative">
-                            <input type="hidden" name="warehouse_id" :value="value" required>
+                        <div x-data="{ open: false, search: '' }" @click.outside="open = false" class="relative">
+                            <input type="hidden" name="warehouse_id" :value="warehouse_id" required>
                             <button type="button" @click="open = !open" class="w-full px-3 py-2 text-left bg-white rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent flex items-center justify-between">
-                                <span x-text="items.find(i => i.id === value)?.name || label" class="truncate"></span>
+                                <span x-text="warehousesList.find(i => i.id === warehouse_id)?.name || '-- Pilih Gudang --'" class="truncate"></span>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </button>
                             <div x-show="open" x-cloak class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 space-y-2">
                                 <input type="text" x-model="search" placeholder="Cari gudang..." class="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 focus:border-transparent">
                                 <div class="max-h-48 overflow-y-auto space-y-0.5">
-                                    <template x-for="item in items.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))" :key="item.id">
-                                        <button type="button" @click="value = item.id; open = false; search = ''" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded-lg" x-text="item.name"></button>
+                                    <template x-for="item in warehousesList.filter(i => i.name.toLowerCase().includes(search.toLowerCase()))" :key="item.id">
+                                        <button type="button" @click="warehouse_id = item.id; open = false; search = ''" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded-lg" x-text="item.name"></button>
                                     </template>
-                                    <div x-show="items.filter(i => i.name.toLowerCase().includes(search.toLowerCase())).length === 0" class="text-center py-2 text-xs text-gray-400">Tidak ditemukan</div>
+                                    <div x-show="warehousesList.filter(i => i.name.toLowerCase().includes(search.toLowerCase())).length === 0" class="text-center py-2 text-xs text-gray-400">Tidak ditemukan</div>
                                 </div>
                             </div>
                         </div>
@@ -90,6 +84,8 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('batchForm', () => ({
                 productsList: @json($products->map(fn($p) => ['id' => (string) $p->id, 'name' => $p->full_name . ' (' . $p->sku . ')'])),
+                warehousesList: @json(collect($warehouses)->map(fn($name, $id) => ['id' => (string) $id, 'name' => $name])->values()),
+                warehouse_id: '{{ old('warehouse_id', '') }}',
                 products: [
                     { product_id: '', planned_qty: 1 }
                 ],
