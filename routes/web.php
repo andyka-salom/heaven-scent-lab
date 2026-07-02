@@ -135,4 +135,14 @@ Route::prefix('production')->middleware('auth')->group(function () {
     });
 });
 
+Route::get('/test-logo', function() {
+    $pngExists = file_exists(public_path('Logo HS - black.png'));
+    $commit = shell_exec('git log -n 1 --oneline');
+    return response()->json([
+        'logo_png_exists' => $pngExists,
+        'git_commit_on_server' => $commit,
+        'blade_has_img' => str_contains(file_get_contents(resource_path('views/layouts/app.blade.php')), 'Logo HS - black.png'),
+    ]);
+});
+
 Route::get('/test-batch-data', [\App\Http\Controllers\BatchController::class, 'data']);
