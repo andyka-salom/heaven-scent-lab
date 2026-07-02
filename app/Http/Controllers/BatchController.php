@@ -37,6 +37,19 @@ class BatchController extends Controller
             ]);
 
         return DataTables::eloquent($query)
+            ->filterColumn('product', function ($query, $keyword) {
+                $query->whereHas('products.product', function ($q) use ($keyword) {
+                    $low = strtolower($keyword);
+                    $q->where(\Illuminate\Support\Facades\DB::raw('LOWER(full_name)'), 'like', "%{$low}%")
+                      ->orWhere(\Illuminate\Support\Facades\DB::raw('LOWER(sku)'), 'like', "%{$low}%");
+                });
+            })
+            ->filterColumn('warehouse', function ($query, $keyword) {
+                $query->whereHas('warehouse', function ($q) use ($keyword) {
+                    $low = strtolower($keyword);
+                    $q->where(\Illuminate\Support\Facades\DB::raw('LOWER(name)'), 'like', "%{$low}%");
+                });
+            })
             ->addColumn('product', function ($b) {
                 if ($b->products->count() === 1) {
                     return $b->products->first()->product?->full_name ?? '-';

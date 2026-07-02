@@ -38,8 +38,8 @@
             dom: "<'dt-layout-header'lf><'overflow-x-auto't><'dt-layout-footer'ip>",
             columns: [
                 {data:'batch_number', name:'batch_number'},
-                {data:'product', name:'product.full_name', orderable: false, searchable: false},
-                {data:'warehouse', name:'warehouse.name', orderable: false},
+                {data:'product', name:'product', orderable: false, searchable: true},
+                {data:'warehouse', name:'warehouse', orderable: false, searchable: true},
                 {data:'planned_qty', name:'planned_qty', orderable: false, searchable: false},
                 {data:'good_qty', name:'good_qty', orderable: false, searchable: false},
                 {data:'defect_qty', name:'defect_qty', orderable: false, searchable: false},

@@ -21,57 +21,28 @@
             @endif
             @if($batch->canBeCompleted())
             @can('batch.complete')
-            <button onclick="openCompleteBatch()" class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">Selesaikan Batch</button>
-
-            <template id="complete-batch-template">
-                <form method="POST" action="{{ route('batches.complete', $batch) }}" id="form-complete-batch" class="text-left">
-                    @csrf
-                    <p class="text-sm text-gray-500 mb-4 text-center">Silakan masukkan jumlah akhir (Unit Baik & Unit Rusak) untuk masing-masing produk pada batch ini.</p>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead class="border-b border-gray-200">
-                                <tr>
-                                    <th class="py-2 font-medium text-gray-600">Produk</th>
-                                    <th class="py-2 font-medium text-gray-600">Jml Rencana</th>
-                                    <th class="py-2 font-medium text-gray-600">Unit Baik (Hasil)</th>
-                                    <th class="py-2 font-medium text-gray-600">Unit Rusak</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @foreach($batch->products as $bp)
-                                <tr>
-                                    <td class="py-3"><span class="font-medium">{{ $bp->product->full_name }}</span><input type="hidden" name="results[{{ $loop->index }}][product_id]" value="{{ $bp->product_id }}"></td>
-                                    <td class="py-3 text-gray-500">{{ $bp->planned_qty }}</td>
-                                    <td class="py-3"><input type="number" name="results[{{ $loop->index }}][good_qty]" value="{{ old('results.'.$loop->index.'.good_qty', $bp->good_qty) }}" min="0" required class="w-20 px-2 py-1 rounded border border-gray-300 text-sm focus:ring-emerald-500 focus:border-emerald-500"></td>
-                                    <td class="py-3"><input type="number" name="results[{{ $loop->index }}][defect_qty]" value="{{ old('results.'.$loop->index.'.defect_qty', $bp->defect_qty) }}" min="0" required class="w-20 px-2 py-1 rounded border border-gray-300 text-sm focus:ring-emerald-500 focus:border-emerald-500"></td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </form>
-            </template>
-            <script>
-                function openCompleteBatch() {
+            <form method="POST" action="{{ route('batches.complete', $batch) }}" class="inline-block" x-data="{
+                confirmComplete(e) {
+                    e.preventDefault();
                     Swal.fire({
                         title: 'Selesaikan Batch',
-                        html: document.getElementById('complete-batch-template').innerHTML,
+                        text: 'Apakah Anda yakin ingin menyelesaikan batch produksi ini? Hasil produksi saat ini akan dikunci.',
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Simpan & Selesaikan',
-                        cancelButtonText: 'Batal',
                         confirmButtonColor: '#059669', // emerald-600
-                        width: '800px',
-                        preConfirm: () => {
-                            const form = Swal.getPopup().querySelector('#form-complete-batch');
-                            if (form.reportValidity()) {
-                                form.submit();
-                            } else {
-                                return false;
-                            }
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Ya, Selesaikan',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $el.submit();
                         }
                     });
                 }
-            </script>
+            }" @submit="confirmComplete">
+                @csrf
+                <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">Selesaikan Batch</button>
+            </form>
             @endcan
             @endif
             @if($batch->canBeCancelled())

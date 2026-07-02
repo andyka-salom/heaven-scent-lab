@@ -57,23 +57,24 @@ class ReportController extends Controller
             $callback = function() use ($batches, $summaryData, $from, $to) {
                 $file = fopen('php://output', 'w');
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                fwrite($file, "sep=;\n");
                 
-                fputcsv($file, ['LAPORAN PRODUKSI HEAVEN SCENT']);
-                fputcsv($file, ["Periode: {$from} s/d {$to}"]);
-                fputcsv($file, []);
+                fputcsv($file, ['LAPORAN PRODUKSI HEAVEN SCENT'], ';');
+                fputcsv($file, ["Periode: {$from} s/d {$to}"], ';');
+                fputcsv($file, [], ';');
 
-                fputcsv($file, ['RINGKASAN LAPORAN']);
-                fputcsv($file, ['Total Batch', 'Total Produk Baik', 'Total Produk Rusak', 'Rata-rata Yield']);
+                fputcsv($file, ['RINGKASAN LAPORAN'], ';');
+                fputcsv($file, ['Total Batch', 'Total Produk Baik', 'Total Produk Rusak', 'Rata-rata Yield'], ';');
                 fputcsv($file, [
                     $summaryData['total_batches'],
-                    $summaryData['total_good'],
-                    $summaryData['total_defect'],
-                    $summaryData['avg_yield'] . '%'
-                ]);
-                fputcsv($file, []);
+                    str_replace('.', ',', $summaryData['total_good']),
+                    str_replace('.', ',', $summaryData['total_defect']),
+                    str_replace('.', ',', $summaryData['avg_yield']) . '%'
+                ], ';');
+                fputcsv($file, [], ';');
 
-                fputcsv($file, ['DAFTAR BATCH PRODUKSI']);
-                fputcsv($file, ['No. Batch', 'Produk', 'Gudang', 'Rencana Qty', 'Baik Qty', 'Rusak Qty', 'Yield', 'Status', 'Tanggal']);
+                fputcsv($file, ['DAFTAR BATCH PRODUKSI'], ';');
+                fputcsv($file, ['No. Batch', 'Produk', 'Gudang', 'Rencana Qty', 'Baik Qty', 'Rusak Qty', 'Yield', 'Status', 'Tanggal'], ';');
 
                 foreach ($batches as $batch) {
                     foreach ($batch->products as $bp) {
@@ -85,10 +86,10 @@ class ReportController extends Controller
                             $bp->planned_qty,
                             $bp->good_qty,
                             $bp->defect_qty,
-                            $yield . '%',
+                            str_replace('.', ',', $yield) . '%',
                             ucfirst($batch->status),
                             $batch->production_date?->format('d/m/Y') ?? '-'
-                        ]);
+                        ], ';');
                     }
                 }
                 fclose($file);
@@ -164,22 +165,23 @@ class ReportController extends Controller
             $callback = function() use ($usage, $from, $to) {
                 $file = fopen('php://output', 'w');
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                fwrite($file, "sep=;\n");
                 
-                fputcsv($file, ['LAPORAN PEMAKAIAN BAHAN HEAVEN SCENT']);
-                fputcsv($file, ["Periode: {$from} s/d {$to}"]);
-                fputcsv($file, []);
+                fputcsv($file, ['LAPORAN PEMAKAIAN BAHAN HEAVEN SCENT'], ';');
+                fputcsv($file, ["Periode: {$from} s/d {$to}"], ';');
+                fputcsv($file, [], ';');
 
-                fputcsv($file, ['Kode Bahan', 'Nama Bahan', 'Satuan', 'Dikeluarkan', 'Tambahan (Top-up)', 'Total Pakai']);
+                fputcsv($file, ['Kode Bahan', 'Nama Bahan', 'Satuan', 'Dikeluarkan', 'Tambahan (Top-up)', 'Total Pakai'], ';');
 
                 foreach ($usage as $u) {
                     fputcsv($file, [
                         $u->code,
                         $u->name,
                         $u->unit,
-                        $u->issued,
-                        $u->additions,
-                        $u->issued + $u->additions
-                    ]);
+                        str_replace('.', ',', (float)$u->issued),
+                        str_replace('.', ',', (float)$u->additions),
+                        str_replace('.', ',', (float)($u->issued + $u->additions))
+                    ], ';');
                 }
                 fclose($file);
             };
@@ -229,12 +231,13 @@ class ReportController extends Controller
             $callback = function() use ($defects, $from, $to) {
                 $file = fopen('php://output', 'w');
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                fwrite($file, "sep=;\n");
                 
-                fputcsv($file, ['LAPORAN DEFECT PRODUK HEAVEN SCENT']);
-                fputcsv($file, ["Periode: {$from} s/d {$to}"]);
-                fputcsv($file, []);
+                fputcsv($file, ['LAPORAN DEFECT PRODUK HEAVEN SCENT'], ';');
+                fputcsv($file, ["Periode: {$from} s/d {$to}"], ';');
+                fputcsv($file, [], ';');
 
-                fputcsv($file, ['Tanggal', 'No. Batch', 'Nama Produk', 'Jumlah Defect', 'Alasan / Keterangan']);
+                fputcsv($file, ['Tanggal', 'No. Batch', 'Nama Produk', 'Jumlah Defect', 'Alasan / Keterangan'], ';');
 
                 foreach ($defects as $d) {
                     fputcsv($file, [
@@ -243,7 +246,7 @@ class ReportController extends Controller
                         $d->product?->full_name ?? '-',
                         $d->defect_qty,
                         $d->reason_label
-                    ]);
+                    ], ';');
                 }
                 fclose($file);
             };
@@ -275,23 +278,24 @@ class ReportController extends Controller
             $callback = function() use ($stocks) {
                 $file = fopen('php://output', 'w');
                 fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                fwrite($file, "sep=;\n");
                 
-                fputcsv($file, ['LAPORAN BAHAN STOK RENDAH HEAVEN SCENT']);
-                fputcsv($file, ['Dibuat Tanggal: ' . now()->format('d/m/Y H:i')]);
-                fputcsv($file, []);
+                fputcsv($file, ['LAPORAN BAHAN STOK RENDAH HEAVEN SCENT'], ';');
+                fputcsv($file, ['Dibuat Tanggal: ' . now()->format('d/m/Y H:i')], ';');
+                fputcsv($file, [], ';');
 
-                fputcsv($file, ['Kode Bahan', 'Nama Bahan', 'Gudang', 'Stok Saat Ini', 'Minimal Alert', 'Kekurangan', 'Satuan']);
+                fputcsv($file, ['Kode Bahan', 'Nama Bahan', 'Gudang', 'Stok Saat Ini', 'Minimal Alert', 'Kekurangan', 'Satuan'], ';');
 
                 foreach ($stocks as $s) {
                     fputcsv($file, [
                         $s->material->code,
                         $s->material->name,
                         $s->warehouse->name,
-                        $s->quantity,
-                        $s->min_alert,
-                        $s->min_alert - $s->quantity,
+                        str_replace('.', ',', (float)$s->quantity),
+                        str_replace('.', ',', (float)$s->min_alert),
+                        str_replace('.', ',', (float)($s->min_alert - $s->quantity)),
                         $s->material->unit
-                    ]);
+                    ], ';');
                 }
                 fclose($file);
             };
