@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Heaven Scent' }} — Produksi</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='logo-grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231e3a5f'/%3E%3Cstop offset='100%25' stop-color='%23c9a227'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='25' fill='url(%23logo-grad)'/%3E%3Ctext x='50%25' y='65%25' font-size='52' font-family='sans-serif' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EHS%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="{{ asset('Logo HS - black.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -24,9 +24,7 @@
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
                class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto">
             <div class="flex items-center gap-3 h-16 px-6 border-b border-gray-100">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-gold-500 flex items-center justify-center">
-                    <span class="text-white font-bold text-sm">HS</span>
-                </div>
+                <img src="{{ asset('Logo HS - black.png') }}" alt="Heaven Scent Logo" class="w-8 h-8 object-contain">
                 <div>
                     <h1 class="text-sm font-bold text-gray-900">Heaven Scent</h1>
                     <p class="text-[10px] text-gray-400 uppercase tracking-wider">Production System</p>

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login — Heaven Scent</title>
+    <link rel="icon" type="image/png" href="{{ asset('Logo HS - black.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -11,8 +12,8 @@
 <body class="h-full font-sans antialiased flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-gold-500 mb-4">
-                <span class="text-white font-bold text-2xl">HS</span>
+            <div class="inline-flex items-center justify-center mb-4">
+                <img src="{{ asset('Logo HS - black.png') }}" alt="Heaven Scent Logo" class="w-16 h-16 object-contain">
             </div>
             <h1 class="text-2xl font-bold text-gray-900">Heaven Scent</h1>
             <p class="text-gray-500 mt-1">Sistem Pencatatan Batch Produksi</p>
