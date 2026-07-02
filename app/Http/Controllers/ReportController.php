@@ -17,8 +17,8 @@ class ReportController extends Controller
     {
         $this->authorize('report.view');
 
-        $from = $request->input('from', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $to = $request->input('to', Carbon::now()->format('Y-m-d'));
+        $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $to = $this->parseDate($request->input('to'), Carbon::now()->format('Y-m-d'));
 
         // DB-level aggregation instead of loading all records into memory
         $summary = DB::table('production_batches')
@@ -52,8 +52,8 @@ class ReportController extends Controller
     {
         $this->authorize('report.view');
 
-        $from = $request->input('from', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $to = $request->input('to', Carbon::now()->format('Y-m-d'));
+        $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $to = $this->parseDate($request->input('to'), Carbon::now()->format('Y-m-d'));
 
         // DB-level aggregation: issued materials from batch_materials
         $issuedUsage = BatchMaterial::query()
@@ -106,8 +106,8 @@ class ReportController extends Controller
     {
         $this->authorize('report.view');
 
-        $from = $request->input('from', Carbon::now()->startOfMonth()->format('Y-m-d'));
-        $to = $request->input('to', Carbon::now()->format('Y-m-d'));
+        $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $to = $this->parseDate($request->input('to'), Carbon::now()->format('Y-m-d'));
 
         // Single efficient query with eager loading
         $defects = BatchDefect::with(['batch', 'product:id,full_name'])
@@ -157,5 +157,21 @@ class ReportController extends Controller
             ->addColumn('unit', fn ($s) => '<span class="text-gray-500">' . $s->material->unit . '</span>')
             ->rawColumns(['material_code', 'material_name', 'warehouse_name', 'quantity', 'min_alert', 'difference', 'unit'])
             ->toJson();
+    }
+
+    private function parseDate(?string $date, string $default): string
+    {
+        if (empty($date)) {
+            return $default;
+        }
+        
+        try {
+            if (str_contains($date, '/')) {
+                return Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d');
+            }
+            return Carbon::parse($date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return $default;
+        }
     }
 }
