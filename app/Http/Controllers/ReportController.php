@@ -55,26 +55,6 @@ class ReportController extends Controller
         $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth()->format('Y-m-d'));
         $to = $this->parseDate($request->input('to'), Carbon::now()->format('Y-m-d'));
 
-        $query1 = BatchMaterial::query()
-            ->join('production_batches', 'batch_materials.production_batch_id', '=', 'production_batches.id')
-            ->join('materials', 'batch_materials.material_id', '=', 'materials.id')
-            ->whereBetween('production_batches.production_date', [$from, $to])
-            ->select(
-                'materials.id as material_id',
-                'materials.code',
-                'materials.name',
-                'materials.unit',
-                DB::raw('COALESCE(SUM(batch_materials.issued_qty), 0) as issued'),
-                DB::raw('0 as additions')
-            )
-            ->groupBy('materials.id', 'materials.code', 'materials.name', 'materials.unit');
-
-        dd([
-            'sql' => $query1->toSql(),
-            'bindings' => $query1->getBindings(),
-            'results' => $query1->get()->toArray(),
-        ]);
-
         // DB-level aggregation: issued materials from batch_materials
         $issuedUsage = BatchMaterial::query()
             ->join('production_batches', 'batch_materials.production_batch_id', '=', 'production_batches.id')
@@ -109,15 +89,15 @@ class ReportController extends Controller
             ->get()
             ->keyBy('material_id');
 
-        // Merge both datasets
-        $usage = $issuedUsage->merge($additionUsage->map(function ($add, $key) use ($issuedUsage) {
+        // Merge both datasets correctly by key to avoid duplicates when keys are numeric
+        foreach ($additionUsage as $key => $add) {
             if ($issuedUsage->has($key)) {
-                $existing = $issuedUsage->get($key);
-                $existing->additions = $add->additions;
-                return $existing;
+                $issuedUsage->get($key)->additions = $add->additions;
+            } else {
+                $issuedUsage->put($key, $add);
             }
-            return $add;
-        }));
+        }
+        $usage = $issuedUsage->values();
 
         return view('reports.material', compact('usage', 'from', 'to'));
     }
