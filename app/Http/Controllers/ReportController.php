@@ -45,6 +45,58 @@ class ReportController extends Controller
             'avg_yield' => round($summary->avg_yield ?? 0, 1),
         ];
 
+        if ($request->input('action') === 'export') {
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=laporan-produksi-{$from}-to-{$to}.csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($batches, $summaryData, $from, $to) {
+                $file = fopen('php://output', 'w');
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, ['LAPORAN PRODUKSI HEAVEN SCENT']);
+                fputcsv($file, ["Periode: {$from} s/d {$to}"]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['RINGKASAN LAPORAN']);
+                fputcsv($file, ['Total Batch', 'Total Produk Baik', 'Total Produk Rusak', 'Rata-rata Yield']);
+                fputcsv($file, [
+                    $summaryData['total_batches'],
+                    $summaryData['total_good'],
+                    $summaryData['total_defect'],
+                    $summaryData['avg_yield'] . '%'
+                ]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['DAFTAR BATCH PRODUKSI']);
+                fputcsv($file, ['No. Batch', 'Produk', 'Gudang', 'Rencana Qty', 'Baik Qty', 'Rusak Qty', 'Yield', 'Status', 'Tanggal']);
+
+                foreach ($batches as $batch) {
+                    foreach ($batch->products as $bp) {
+                        $yield = $bp->planned_qty > 0 ? round(($bp->good_qty / $bp->planned_qty) * 100, 1) : 0;
+                        fputcsv($file, [
+                            $batch->batch_number,
+                            $bp->product?->full_name ?? '-',
+                            $batch->warehouse?->name ?? '-',
+                            $bp->planned_qty,
+                            $bp->good_qty,
+                            $bp->defect_qty,
+                            $yield . '%',
+                            ucfirst($batch->status),
+                            $batch->production_date?->format('d/m/Y') ?? '-'
+                        ]);
+                    }
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
         return view('reports.production', compact('batches', 'summaryData', 'from', 'to'));
     }
 
@@ -100,6 +152,41 @@ class ReportController extends Controller
         }
         $usage = $issuedUsage->values();
 
+        if ($request->input('action') === 'export') {
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=laporan-pemakaian-bahan-{$from}-to-{$to}.csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($usage, $from, $to) {
+                $file = fopen('php://output', 'w');
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, ['LAPORAN PEMAKAIAN BAHAN HEAVEN SCENT']);
+                fputcsv($file, ["Periode: {$from} s/d {$to}"]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['Kode Bahan', 'Nama Bahan', 'Satuan', 'Dikeluarkan', 'Tambahan (Top-up)', 'Total Pakai']);
+
+                foreach ($usage as $u) {
+                    fputcsv($file, [
+                        $u->code,
+                        $u->name,
+                        $u->unit,
+                        $u->issued,
+                        $u->additions,
+                        $u->issued + $u->additions
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
         return view('reports.material', compact('usage', 'from', 'to'));
     }
 
@@ -130,12 +217,88 @@ class ReportController extends Controller
                 'count' => $group->count(),
             ]);
 
+        if ($request->input('action') === 'export') {
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=laporan-defect-{$from}-to-{$to}.csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $callback = function() use ($defects, $from, $to) {
+                $file = fopen('php://output', 'w');
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, ['LAPORAN DEFECT PRODUK HEAVEN SCENT']);
+                fputcsv($file, ["Periode: {$from} s/d {$to}"]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['Tanggal', 'No. Batch', 'Nama Produk', 'Jumlah Defect', 'Alasan / Keterangan']);
+
+                foreach ($defects as $d) {
+                    fputcsv($file, [
+                        $d->created_at->format('d/m/Y H:i'),
+                        $d->batch?->batch_number ?? '-',
+                        $d->product?->full_name ?? '-',
+                        $d->defect_qty,
+                        $d->reason_label
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
         return view('reports.defect', compact('defects', 'byReason', 'byProduct', 'from', 'to'));
     }
 
-    public function lowStock()
+    public function lowStock(Request $request)
     {
         $this->authorize('report.view');
+
+        if ($request->input('action') === 'export') {
+            $headers = [
+                "Content-type"        => "text/csv",
+                "Content-Disposition" => "attachment; filename=laporan-stok-rendah.csv",
+                "Pragma"              => "no-cache",
+                "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+                "Expires"             => "0"
+            ];
+
+            $stocks = MaterialStock::with(['material:id,code,name,unit', 'warehouse:id,name'])
+                ->where('min_alert', '>', 0)
+                ->whereRaw('quantity <= min_alert')
+                ->get();
+
+            $callback = function() use ($stocks) {
+                $file = fopen('php://output', 'w');
+                fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                fputcsv($file, ['LAPORAN BAHAN STOK RENDAH HEAVEN SCENT']);
+                fputcsv($file, ['Dibuat Tanggal: ' . now()->format('d/m/Y H:i')]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['Kode Bahan', 'Nama Bahan', 'Gudang', 'Stok Saat Ini', 'Minimal Alert', 'Kekurangan', 'Satuan']);
+
+                foreach ($stocks as $s) {
+                    fputcsv($file, [
+                        $s->material->code,
+                        $s->material->name,
+                        $s->warehouse->name,
+                        $s->quantity,
+                        $s->min_alert,
+                        $s->min_alert - $s->quantity,
+                        $s->material->unit
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
         return view('reports.low-stock');
     }
 
