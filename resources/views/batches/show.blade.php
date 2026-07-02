@@ -149,17 +149,34 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="border-b border-gray-200"><tr>
-                    <th class="py-2 text-left font-medium text-gray-600">Bahan</th><th class="py-2 text-left font-medium text-gray-600">Rencana</th><th class="py-2 text-left font-medium text-gray-600">Stok</th><th class="py-2 text-left font-medium text-gray-600">Dikeluarkan</th><th class="py-2 text-left font-medium text-gray-600">Status</th>
+                    <th class="py-2 text-left font-medium text-gray-600">Bahan</th>
+                    <th class="py-2 text-left font-medium text-gray-600">Rencana</th>
+                    <th class="py-2 text-left font-medium text-gray-600">Stok Terkini</th>
+                    <th class="py-2 text-left font-medium text-gray-600">Stok yang Digunakan</th>
+                    <th class="py-2 text-left font-medium text-gray-600">Status</th>
                 </tr></thead>
                 <tbody class="divide-y divide-gray-100">
                     @foreach($preview as $item)
                     <tr class="{{ !$item['is_sufficient'] && $batch->status === 'draft' ? 'bg-red-50' : '' }}">
                         <td class="py-2"><span class="font-medium">{{ $item['material_name'] }}</span><br><span class="text-xs text-gray-400">{{ $item['material_code'] }}</span></td>
                         <td class="py-2">{{ number_format($item['planned_qty'], 1, ',', '.') }} {{ $item['unit'] }}</td>
-                        <td class="py-2 {{ $item['stock_qty'] < $item['planned_qty'] ? 'text-red-600 font-semibold' : '' }}">{{ number_format($item['stock_qty'], 1, ',', '.') }} {{ $item['unit'] }}</td>
-                        <td class="py-2">{{ number_format($batch->materials->firstWhere('material_id', $item['material_id'])?->issued_qty ?? 0, 1, ',', '.') }} {{ $item['unit'] }}</td>
+                        <td class="py-2">{{ number_format($item['stock_qty'], 1, ',', '.') }} {{ $item['unit'] }}</td>
+                        @php
+                            $initialIssued = $batch->materials->firstWhere('material_id', $item['material_id'])?->issued_qty ?? 0;
+                            $additionalIssued = $batch->additions->where('material_id', $item['material_id'])->sum('quantity');
+                            $totalIssued = $initialIssued + $additionalIssued;
+                        @endphp
+                        <td class="py-2">{{ number_format($totalIssued, 1, ',', '.') }} {{ $item['unit'] }}</td>
                         <td class="py-2">
-                            @if($item['is_sufficient'])<span class="text-emerald-600 text-xs font-medium">Cukup</span>@else<span class="text-red-600 text-xs font-medium">Kurang</span>@endif
+                            @if($batch->status === 'draft')
+                                @if($item['is_sufficient'])
+                                    <span class="text-emerald-600 text-xs font-medium">Cukup</span>
+                                @else
+                                    <span class="text-red-600 text-xs font-medium">Kurang</span>
+                                @endif
+                            @else
+                                <span class="text-emerald-600 text-xs font-medium">Sudah Dikeluarkan</span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
@@ -189,26 +206,38 @@
                     @if($sisa > 0)
                     <div class="flex flex-wrap items-center gap-6">
                         @can('batch.record_output')
-                        <form method="POST" action="{{ route('batches.output', $batch) }}" class="flex items-center gap-2">
+                        <form method="POST" action="{{ route('batches.output', $batch) }}" class="flex items-end gap-2">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $bp->product_id }}">
-                            <input type="number" name="good_qty" min="1" max="{{ $sisa }}" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Baik">
-                            <button type="submit" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition">Catat Baik</button>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Qty Baik</label>
+                                <input type="number" name="good_qty" min="1" max="{{ $sisa }}" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 h-8" placeholder="0">
+                            </div>
+                            <button type="submit" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 transition h-8 flex items-center justify-center">Catat Baik</button>
                         </form>
                         @endcan
 
                         @can('batch.record_defect')
-                        <form method="POST" action="{{ route('batches.defect', $batch) }}" class="flex items-center gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-2 lg:pt-0 lg:pl-6">
+                        <form method="POST" action="{{ route('batches.defect', $batch) }}" class="flex items-end gap-2 border-t lg:border-t-0 lg:border-l border-gray-200 pt-2 lg:pt-0 lg:pl-6">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $bp->product_id }}">
-                            <input type="number" name="defect_qty" min="1" max="{{ $sisa }}" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500" placeholder="Qty Rusak">
-                            <select name="reason" required class="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500">
-                                @foreach(\App\Models\BatchDefect::REASONS as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            <input type="text" name="notes" class="w-28 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500" placeholder="Catatan (opsional)">
-                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition">Catat Rusak</button>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Qty Rusak</label>
+                                <input type="number" name="defect_qty" min="1" max="{{ $sisa }}" required class="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-primary-500 h-8" placeholder="0">
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Alasan</label>
+                                <select name="reason" required class="px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 h-8">
+                                    @foreach(\App\Models\BatchDefect::REASONS as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-0.5">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Catatan</label>
+                                <input type="text" name="notes" class="w-28 px-2 py-1 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 h-8" placeholder="Opsional">
+                            </div>
+                            <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition h-8 flex items-center justify-center">Catat Rusak</button>
                         </form>
                         @endcan
                     </div>
