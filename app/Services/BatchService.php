@@ -173,15 +173,17 @@ class BatchService
                 'created_at' => now(),
             ]);
 
-            $this->stock->move(
-                $batch->warehouse_id,
-                $materialId,
-                'out',
-                $qty,
-                'BatchMaterialAddition',
-                $addition->id,
-                ($type === 'defect' ? "Penggantian bahan rusak batch #" : "Top-up batch #") . $batch->batch_number
-            );
+            if ($type === 'topup') {
+                $this->stock->move(
+                    $batch->warehouse_id,
+                    $materialId,
+                    'out',
+                    $qty,
+                    'BatchMaterialAddition',
+                    $addition->id,
+                    "Top-up batch #{$batch->batch_number}"
+                );
+            }
         });
 
         Log::info("Material added: batch {$batch->batch_number}, material #{$materialId}, qty {$qty}, type {$type}");
@@ -430,7 +432,7 @@ class BatchService
      */
     private function returnTopUpMaterials(ProductionBatch $batch): void
     {
-        foreach ($batch->additions as $add) {
+        foreach ($batch->additions->where('type', 'topup') as $add) {
             $this->stock->move(
                 $batch->warehouse_id,
                 $add->material_id,
